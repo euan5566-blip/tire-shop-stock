@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบร้านยาง - Tire Shop Stock</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,"Noto Sans Thai",sans-serif;
+  background:#f4f6f8;
+  color:#172033;
+}
+button,input,select{font:inherit}
+button{cursor:pointer;border:0}
+.hidden{display:none!important}
+
+.login{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:linear-gradient(135deg,#101827,#243b53);
+}
+.login-box{
+  width:100%;
+  max-width:420px;
+  background:white;
+  padding:30px;
+  border-radius:20px;
+  box-shadow:0 15px 50px #0005;
+}
+.login-box h1{margin-top:0;text-align:center}
+.login-box input{
+  width:100%;
+  padding:13px;
+  margin:7px 0 12px;
+  border:1px solid #d7dce2;
+  border-radius:10px;
+}
+.primary{
+  background:#1677ff;
+  color:white;
+  padding:12px 18px;
+  border-radius:10px;
+  font-weight:bold;
+}
+.danger{background:#dc3545;color:white;padding:9px 13px;border-radius:8px}
+.success{background:#198754;color:white;padding:9px 13px;border-radius:8px}
+.gray{background:#e9ecef;color:#222;padding:9px 13px;border-radius:8px}
+
+.app{min-height:100vh}
+.topbar{
+  background:#111827;
+  color:white;
+  padding:14px 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:20;
+}
+.brand{font-size:20px;font-weight:bold}
+.top-actions{display:flex;gap:8px;align-items:center}
+
+.layout{display:flex}
+.sidebar{
+  width:230px;
+  min-height:calc(100vh - 60px);
+  background:#182230;
+  padding:15px 10px;
+  position:fixed;
+  left:0;
+  top:60px;
+  bottom:0;
+}
+.nav{
+  width:100%;
+  text-align:left;
+  background:transparent;
+  color:#dce3ec;
+  padding:13px;
+  margin-bottom:5px;
+  border-radius:9px;
+}
+.nav:hover,.nav.active{background:#1677ff;color:white}
+
+.main{
+  margin-left:230px;
+  width:calc(100% - 230px);
+  padding:20px;
+}
+.page{display:none}
+.page.active{display:block}
+
+h2{margin-top:0}
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:15px;
+  margin-bottom:20px;
+}
+.card{
+  background:white;
+  padding:20px;
+  border-radius:14px;
+  box-shadow:0 2px 10px #0000000c;
+}
+.card-title{font-size:14px;color:#6b7280}
+.card-value{font-size:27px;font-weight:bold;margin-top:8px}
+
+.panel{
+  background:white;
+  border-radius:14px;
+  padding:18px;
+  margin-bottom:20px;
+  box-shadow:0 2px 10px #0000000c;
+}
+.panel-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:15px;
+  flex-wrap:wrap;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+th,td{
+  padding:11px 8px;
+  border-bottom:1px solid #e8ebef;
+  text-align:left;
+}
+th{background:#f7f8fa}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+}
+.form-group label{
+  display:block;
+  font-size:14px;
+  margin-bottom:5px;
+  font-weight:bold;
+}
+.form-group input,.form-group select{
+  width:100%;
+  padding:11px;
+  border:1px solid #d8dde4;
+  border-radius:9px;
+}
+.full{grid-column:1/-1}
+
+.toolbar{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.toolbar input,.toolbar select{
+  padding:10px;
+  border:1px solid #d8dde4;
+  border-radius:9px;
+}
+
+.badge{
+  padding:5px 8px;
+  border-radius:20px;
+  font-size:12px;
+  background:#e9f2ff;
+  color:#1677ff;
+}
+.low{background:#fff0f0;color:#dc3545}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:#0008;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:15px;
+  z-index:100;
+}
+.modal-box{
+  background:white;
+  width:100%;
+  max-width:650px;
+  max-height:90vh;
+  overflow:auto;
+  border-radius:16px;
+  padding:20px;
+}
+
+.toast{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  background:#111827;
+  color:white;
+  padding:13px 18px;
+  border-radius:10px;
+  z-index:200;
+  display:none;
+}
+
+@media(max-width:900px){
+  .cards{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:700px){
+  .sidebar{
+    width:70px;
+    padding:10px 6px;
+  }
+  .nav{
+    font-size:0;
+    text-align:center;
+  }
+  .nav::first-letter{font-size:20px}
+  .main{
+    margin-left:70px;
+    width:calc(100% - 70px);
+    padding:12px;
+  }
+  .cards{grid-template-columns:1fr 1fr}
+  .form-grid{grid-template-columns:1fr}
+  .full{grid-column:auto}
+  table{font-size:13px}
+  th,td{white-space:nowrap}
+  .table-scroll{overflow-x:auto}
+}
+@media(max-width:450px){
+  .cards{grid-template-columns:1fr}
+  .brand{font-size:16px}
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<section id="loginScreen" class="login">
+  <div class="login-box">
+    <h1>🛞 ร้านยาง</h1>
+    <p style="text-align:center;color:#777">ระบบจัดการร้านยาง</p>
+
+    <label>อีเมล</label>
+    <input id="loginEmail" type="email" placeholder="อีเมล">
+
+    <label>รหัสผ่าน</label>
+    <input id="loginPassword" type="password" placeholder="รหัสผ่าน">
+
+    <button class="primary" style="width:100%" onclick="login()">
+      🔐 เข้าสู่ระบบ
+    </button>
+
+    <p id="loginMessage" style="color:#dc3545"></p>
+  </div>
+</section>
+
+<!-- APP -->
+<section id="app" class="app hidden">
+
+<header class="topbar">
+  <div class="brand">🛞 Tire Shop Stock</div>
+  <div class="top-actions">
+    <span id="userEmail"></span>
+    <button class="danger" onclick="logout()">ออกจากระบบ</button>
+  </div>
+</header>
+
+<div class="layout">
+
+<aside class="sidebar">
+  <button class="nav active" onclick="showPage('dashboard',this)">📊 Dashboard</button>
+  <button class="nav" onclick="showPage('products',this)">📦 สินค้า/สต็อก</button>
+  <button class="nav" onclick="showPage('sales',this)">🧾 ขายสินค้า</button>
+  <button class="nav" onclick="showPage('customers',this)">👤 ลูกค้า</button>
+  <button class="nav" onclick="showPage('expenses',this)">💵 ค่าใช้จ่าย</button>
+  <button class="nav" onclick="showPage('reports',this)">📈 รายงาน</button>
+</aside>
+
+<main class="main">
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="page active">
+<h2>📊 Dashboard</h2>
+
+<div class="cards">
+  <div class="card">
+    <div class="card-title">สินค้าทั้งหมด</div>
+    <div class="card-value" id="totalProducts">0</div>
+  </div>
+  <div class="card">
+    <div class="card-title">จำนวนสินค้าในสต็อก</div>
+    <div class="card-value" id="totalStock">0</div>
+  </div>
+  <div class="card">
+    <div class="card-title">ยอดขาย</div>
+    <div class="card-value" id="totalSales">0 ฿</div>
+  </div>
+  <div class="card">
+    <div class="card-title">กำไรขั้นต้น</div>
+    <div class="card-value" id="totalProfit">0 ฿</div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <h3>⚠️ สินค้าใกล้หมด</h3>
+    <button class="gray" onclick="loadDashboard()">รีเฟรช</button>
+  </div>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>สินค้า</th>
+          <th>คงเหลือ</th>
+          <th>จุดสั่งซื้อ</th>
+        </tr>
+      </thead>
+      <tbody id="lowStockTable"></tbody>
+    </table>
+  </div>
+</div>
+</section>
+
+<!-- PRODUCTS -->
+<section id="products" class="page">
+<h2>📦 สินค้า / สต็อก</h2>
+
+<div class="panel">
+  <div class="panel-head">
+    <h3>รายการสินค้า</h3>
+    <button class="primary" onclick="openProductModal()">➕ เพิ่มสินค้า</button>
+  </div>
+
+  <div class="toolbar">
+    <input id="productSearch" placeholder="ค้นหาสินค้า..." oninput="renderProducts()">
+    <select id="categoryFilter" onchange="renderProducts()">
+      <option value="">ทุกประเภท</option>
+      <option>ยางรถยนต์</option>
+      <option>น้ำมันเครื่อง</option>
+      <option>แบตเตอรี่</option>
+      <option>อะไหล่</option>
+      <option>อื่นๆ</option>
+    </select>
+  </div>
+
+  <br>
+
+  <div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>สินค้า</th>
+        <th>ประเภท</th>
+        <th>คงเหลือ</th>
+        <th>ราคาทุน</th>
+        <th>ราคาขาย</th>
+        <th>กำไร/ชิ้น</th>
+        <th>จัดการ</th>
+      </tr>
+    </thead>
+    <tbody id="productsTable"></tbody>
+  </table>
+  </div>
+</div>
+</section>
+
+<!-- SALES -->
+<section id="sales" class="page">
+<h2>🧾 ระบบขายสินค้า</h2>
+
+<div class="panel">
+  <div class="panel-head">
+    <h3>สร้างรายการขาย</h3>
+  </div>
+
+  <div class="form-grid">
+    <div class="form-group">
+      <label>ลูกค้า</label>
+      <select id="saleCustomer">
+        <option value="">ลูกค้าทั่วไป</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>ทะเบียนรถ</label>
+      <input id="salePlate" placeholder="เช่น ກກ 1234">
+    </div>
+
+    <div class="form-group">
+      <label>สินค้า</label>
+      <select id="saleProduct" onchange="updateSalePrice()"></select>
+    </div>
+
+    <div class="form-group">
+      <label>จำนวน</label>
+      <input id="saleQty" type="number" min="1" value="1">
+    </div>
+
+    <div class="form-group">
+      <label>ราคาขาย/หน่วย</label>
+      <input id="salePrice" type="number" min="0">
+    </div>
+
+    <div class="form-group">
+      <label>ส่วนลด</label>
+      <input id="saleDiscount" type="number" min="0" value="0">
+    </div>
+  </div>
+
+  <br>
+
+  <button class="primary" onclick="createSale()">
+    💳 บันทึกการขาย + ตัดสต็อก
+  </button>
+</div>
+
+<div class="panel">
+<h3>ประวัติการขายล่าสุด</h3>
+<div class="table-scroll">
+<table>
+<thead>
+<tr>
+<th>วันที่</th>
+<th>สินค้า</th>
+<th>จำนวน</th>
+<th>ยอดขาย</th>
+<th>กำไร</th>
+</tr>
+</thead>
+<tbody id="salesTable"></tbody>
+</table>
+</div>
+</div>
+</section>
+
+<!-- CUSTOMERS -->
+<section id="customers" class="page">
+<h2>👤 ลูกค้า / 🚗 ทะเบียนรถ</h2>
+
+<div class="panel">
+  <div class="panel-head">
+    <h3>ลูกค้า</h3>
+    <button class="primary" onclick="openCustomerModal()">➕ เพิ่มลูกค้า</button>
+  </div>
+
+  <div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>ชื่อ</th>
+        <th>โทรศัพท์</th>
+        <th>ทะเบียนรถ</th>
+        <th>จัดการ</th>
+      </tr>
+    </thead>
+    <tbody id="customersTable"></tbody>
+  </table>
+  </div>
+</div>
+</section>
+
+<!-- EXPENSES -->
+<section id="expenses" class="page">
+<h2>💵 ค่าใช้จ่าย</h2>
+
+<div class="panel">
+  <div class="panel-head">
+    <h3>รายการค่าใช้จ่าย</h3>
+    <button class="primary" onclick="openExpenseModal()">➕ เพิ่มค่าใช้จ่าย</button>
+  </div>
+
+  <div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>วันที่</th>
+        <th>รายการ</th>
+        <th>ประเภท</th>
+        <th>จำนวนเงิน</th>
+        <th>จัดการ</th>
+      </tr>
+    </thead>
+    <tbody id="expensesTable"></tbody>
+  </table>
+  </div>
+</div>
+</section>
+
+<!-- REPORTS -->
+<section id="reports" class="page">
+<h2>📈 รายงาน</h2>
+
+<div class="cards">
+  <div class="card">
+    <div class="card-title">ยอดขายรวม</div>
+    <div class="card-value" id="reportSales">0 ฿</div>
+  </div>
+  <div class="card">
+    <div class="card-title">กำไรขั้นต้น</div>
+    <div class="card-value" id="reportProfit">0 ฿</div>
+  </div>
+  <div class="card">
+    <div class="card-title">ค่าใช้จ่าย</div>
+    <div class="card-value" id="reportExpense">0 ฿</div>
+  </div>
+  <div class="card">
+    <div class="card-title">กำไรสุทธิ</div>
+    <div class="card-value" id="reportNet">0 ฿</div>
+  </div>
+</div>
+
+<div class="panel">
+  <h3>สรุปผลประกอบการ</h3>
+  <p>กำไรสุทธิ = กำไรจากการขาย - ค่าใช้จ่าย</p>
+</div>
+</section>
+
+</main>
+</div>
+</section>
+
+<!-- PRODUCT MODAL -->
+<div id="productModal" class="modal hidden">
+<div class="modal-box">
+<h2>➕ เพิ่มสินค้า</h2>
+
+<div class="form-grid">
+<div class="form-group">
+<label>ชื่อสินค้า</label>
+<input id="pName" placeholder="เช่น Siamese 2026">
+</div>
+
+<div class="form-group">
+<label>ประเภท</label>
+<select id="pCategory">
+<option>ยางรถยนต์</option>
+<option>น้ำมันเครื่อง</option>
+<option>แบตเตอรี่</option>
+<option>อะไหล่</option>
+<option>อื่นๆ</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>จำนวน</label>
+<input id="pQuantity" type="number" min="0" value="0">
+</div>
+
+<div class="form-group">
+<label>จุดสั่งซื้อขั้นต่ำ</label>
+<input id="pMinStock" type="number" min="0" value="2">
+</div>
+
+<div class="form-group">
+<label>ราคาทุน (฿)</label>
+<input id="pCost" type="number" min="0" value="0">
+</div>
+
+<div class="form-group">
+<label>ราคาขาย (฿)</label>
+<input id="pSale" type="number" min="0" value="0">
+</div>
+</div>
+
+<br>
+<button class="primary" onclick="saveProduct()">บันทึกสินค้า</button>
+<button class="gray" onclick="closeModal('productModal')">ยกเลิก</button>
+</div>
+</div>
+
+<!-- CUSTOMER MODAL -->
+<div id="customerModal" class="modal hidden">
+<div class="modal-box">
+<h2>👤 เพิ่มลูกค้า</h2>
+
+<div class="form-grid">
+<div class="form-group">
+<label>ชื่อ</label>
+<input id="cName">
+</div>
+
+<div class="form-group">
+<label>โทรศัพท์</label>
+<input id="cPhone">
+</div>
+
+<div class="form-group full">
+<label>ทะเบียนรถ</label>
+<input id="cPlate">
+</div>
+</div>
+
+<br>
+<button class="primary" onclick="saveCustomer()">บันทึก</button>
+<button class="gray" onclick="closeModal('customerModal')">ยกเลิก</button>
+</div>
+</div>
+
+<!-- EXPENSE MODAL -->
+<div id="expenseModal" class="modal hidden">
+<div class="modal-box">
+<h2>💵 เพิ่มค่าใช้จ่าย</h2>
+
+<div class="form-grid">
+<div class="form-group">
+<label>รายการ</label>
+<input id="eDescription">
+</div>
+
+<div class="form-group">
+<label>ประเภท</label>
+<select id="eCategory">
+<option>ค่าไฟ</option>
+<option>ค่าเช่า</option>
+<option>ค่าขนส่ง</option>
+<option>ค่าแรง</option>
+<option>การตลาด</option>
+<option>อื่นๆ</option>
+</select>
+</div>
+
+<div class="form-group full">
+<label>จำนวนเงิน (฿)</label>
+<input id="eAmount" type="number" min="0">
+</div>
+</div>
+
+<br>
+<button class="primary" onclick="saveExpense()">บันทึก</button>
+<button class="gray" onclick="closeModal('expenseModal')">ยกเลิก</button>
+</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* =========================================================
+   SUPABASE CONFIG
+   ========================================================= */
+
+const SUPABASE_URL = "https://zslnuhaeutdsaeghhmxl.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_Wng9wm2-7HtnFj_0gEOvvg_BAVhuUr0";
+
+const supabaseClient =
+  supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let products = [];
+let customers = [];
+let sales = [];
+let expenses = [];
+
+/* =========================================================
+   LOGIN
+   ========================================================= */
+
+async function login(){
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+
+  if(!email || !password){
+    showLoginMessage("กรุณากรอกอีเมลและรหัสผ่าน");
+    return;
+  }
+
+  const {error} =
+    await supabaseClient.auth.signInWithPassword({
+      email,
+      password
+    });
+
+  if(error){
+    showLoginMessage(error.message);
+    return;
+  }
+
+  await initApp();
+}
+
+async function logout(){
+  await supabaseClient.auth.signOut();
+  location.reload();
+}
+
+function showLoginMessage(msg){
+  document.getElementById("loginMessage").textContent = msg;
+}
+
+/* =========================================================
+   APP START
+   ========================================================= */
+
+async function initApp(){
+  const {data} = await supabaseClient.auth.getUser();
+
+  if(!data.user){
+    document.getElementById("loginScreen").classList.remove("hidden");
+    document.getElementById("app").classList.add("hidden");
+    return;
+  }
+
+  document.getElementById("loginScreen").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  document.getElementById("userEmail").textContent = data.user.email;
+
+  await loadAll();
+}
+
+supabaseClient.auth.onAuthStateChange((event, session)=>{
+  if(session){
+    document.getElementById("loginScreen").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+  }
+});
+
+/* =========================================================
+   LOAD DATA
+   ========================================================= */
+
+async function loadAll(){
+  await Promise.all([
+    loadProducts(),
+    loadCustomers(),
+    loadSales(),
+    loadExpenses()
+  ]);
+
+  loadDashboard();
+}
+
+/* =========================================================
+   PRODUCTS
+   ========================================================= */
+
+async function loadProducts(){
+  const {data,error} = await supabaseClient
+    .from("products")
+    .select("*")
+    .order("created_at",{ascending:false});
+
+  if(error){
+    console.error(error);
+    toast(error.message);
+    return;
+  }
+
+  products = data || [];
+  renderProducts();
+  updateSaleProducts();
+}
+
+function renderProducts(){
+  const search =
+    document.getElementById("productSearch").value.toLowerCase();
+
+  const category =
+    document.getElementById("categoryFilter").value;
+
+  const list = products.filter(p=>{
+    const okSearch =
+      !search ||
+      String(p.name || "").toLowerCase().includes(search);
+
+    const okCategory =
+      !category || p.category === category;
+
+    return okSearch && okCategory;
+  });
+
+  document.getElementById("productsTable").innerHTML =
+    list.map(p=>`
+      <tr>
+        <td><b>${escapeHtml(p.name)}</b></td>
+        <td>${escapeHtml(p.category || "-")}</td>
+        <td>
+          <span class="badge ${Number(p.quantity)<=Number(p.min_stock) ? "low":""}">
+            ${Number(p.quantity)}
+          </span>
+        </td>
+        <td>${money(p.cost_price)}</td>
+        <td>${money(p.sale_price)}</td>
+        <td>${money(Number(p.sale_price)-Number(p.cost_price))}</td>
+        <td>
+          <button class="danger" onclick="deleteProduct('${p.id}')">
+            🗑️
+          </button>
+        </td>
+      </tr>
+    `).join("");
+}
+
+function openProductModal(){
+  document.getElementById("productModal").classList.remove("hidden");
+}
+
+async function saveProduct(){
+  const name =
+    document.getElementById("pName").value.trim();
+
+  const category =
+    document.getElementById("pCategory").value;
+
+  const quantity =
+    Number(document.getElementById("pQuantity").value || 0);
+
+  const min_stock =
+    Number(document.getElementById("pMinStock").value || 0);
+
+  const cost_price =
+    Number(document.getElementById("pCost").value || 0);
+
+  const sale_price =
+    Number(document.getElementById("pSale").value || 0);
+
+  if(!name){
+    toast("กรุณาใส่ชื่อสินค้า");
+    return;
+  }
+
+  const {error} =
+    await supabaseClient
+      .from("products")
+      .insert({
+        name,
+        category,
+        quantity,
+        min_stock,
+        cost_price,
+        sale_price
+      });
+
+  if(error){
+    toast(error.message);
+    return;
+  }
+
+  closeModal("productModal");
+  clearProductForm();
+  toast("เพิ่มสินค้าเรียบร้อย");
+  await loadProducts();
+  await loadDashboard();
+}
+
+async function deleteProduct(id){
+  if(!confirm("ต้องการลบสินค้านี้ใช่หรือไม่?")) return;
+
+  const {error} =
+    await supabaseClient
+      .from("products")
+      .delete()
+      .eq("id",id);
+
+  if(error){
+    toast(error.message);
+    return;
+  }
+
+  toast("ลบสินค้าแล้ว");
+  await loadProducts();
+  await loadDashboard();
+}
+
+function clearProductForm(){
+  ["pName","pQuantity","pMinStock","pCost","pSale"]
+  .forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value="";
+  });
+
+  document.getElementById("pQuantity").value=0;
+  document.getElementById("pMinStock").value=2;
+  document.getElementById("pCost").value=0;
+  document.getElementById("pSale").value=0;
+}
+
+/* =========================================================
+   CUSTOMERS
+   ========================================================= */
+
+async function loadCustomers(){
+  const {data,error} =
+    await supabaseClient
+      .from("customers")
+      .select("*")
+      .order("created_at",{ascending:false});
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  customers=data || [];
+  renderCustomers();
+  updateSaleCustomers();
+}
+
+function renderCustomers(){
+  document.getElementById("customersTable").innerHTML =
+    customers.map(c=>`
+      <tr>
+        <td>${escapeHtml(c.name)}</td>
+        <td>${escapeHtml(c.phone || "-")}</td>
+        <td>${escapeHtml(c.plate || "-")}</td>
+        <td>
+          <button class="danger"
+            onclick="deleteCustomer('${c.id}')">
+            🗑️
+          </button>
+        </td>
+      </tr>
+    `).join("");
+}
+
+function openCustomerModal(){
+  document.getElementById("customerModal").classList.remove("hidden");
+}
+
+async function saveCustomer(){
+  const name =
+    document.getElementById("cName").value.trim();
+
+  const phone =
+    document.getElementById("cPhone").value.trim();
+
+  const plate =
+    document.getElementById("cPlate").value.trim();
+
+  if(!name){
+    toast("กรุณาใส่ชื่อลูกค้า");
+    return;
+  }
+
+  const {error} =
+    await supabaseClient
+      .from("customers")
+      .insert({
+        name,
+        phone,
+        plate
+      });
+
+  if(error){
+    toast(error.message);
+    return;
+  }
+
+  closeModal("customerModal");
+
+  document.getElementById("cName").value="";
+  document.getElementById("cPhone").value="";
+  document.getElementById("cPlate").value="";
+
+  toast("เพิ่มลูกค้าแล้ว");
+  await loadCustomers();
+}
+
+async function deleteCustomer(id){
+  if(!confirm("ลบลูกค้ารายนี้หรือไม่?")) return;
+
+  const {error} =
+    await supabaseClient
+      .from("customers")
+      .delete()
+      .eq("id",id);
+
+  if(error){
+    toast(error.message);
+    return;
+  }
+
+  await loadCustomers();
+  toast("ลบลูกค้าแล้ว");
+}
+
+/* =========================================================
+   SALES
+   ========================================================= */
+
+async function loadSales(){
+  const {data,error} =
+    await supabaseClient
+      .from("sales")
+      .select("*")
+      .order("created_at",{ascending:false})
+      .limit(100);
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  sales=data || [];
+  renderSales();
+  calculateReports();
+}
+
+function updateSaleProducts(){
+  const select =
+    document.getElementById("saleProduct");
+
+  select.innerHTML =
+    `<option value="">เลือกสินค้า</option>` +
+    products.map(p=>`
+      <option value="${p.id}">
+        ${escapeHtml(p.name)} (เหลือ ${p.quantity})
+      </option>
+    `).join("");
+}
+
+function updateSaleCustomers(){
+  const select =
+    document.getElementById("saleCustomer");
+
+  select.innerHTML =
+    `<option value="">ลูกค้าทั่วไป</option>` +
+    customers.map(c=>`
+      <option value="${c.id}">
+        ${escapeHtml(c.name)} ${c.plate ? "- "+escapeHtml(c.plate):""}
+      </option>
+    `).join("");
+}
+
+function updateSalePrice(){
+  const id =
+    document.getElementById("saleProduct").value;
+
+  const p =
+    products.find(x=>String(x.id)===String(id));
+
+  document.getElementById("salePrice").value =
+    p ? Number(p.sale_price) : 0;
+}
+
+async function createSale(){
+  const productId =
+    document.getElementById("saleProduct").value;
+
+  const customerId =
+    document.getElementById("saleCustomer").value || null;
+
+  const plate =
+    document.getElementById("salePlate").value.trim();
+
+  const qty =
+    Number(document.getElementById("saleQty").value);
+
+  const price =
+    Number(document.getElementById("salePrice").value);
+
+  const discount =
+    Number(document.getElementById("saleDiscount").value || 0);
+
+  const product =
+    products.find(p=>String(p.id)===String(productId));
+
+  if(!product){
+    toast("กรุณาเลือกสินค้า");
+    return;
+  }
+
+  if(qty<=0){
+    toast("จำนวนไม่ถูกต้อง");
+    return;
+  }
+
+  if(qty>Number(product.quantity)){
+    toast("สินค้าในสต็อกไม่พอ");
+    return;
+  }
+
+  const total =
+    Math.max(0,(qty*price)-discount);
+
+  const profit =
+    total - (qty*Number(product.cost_price));
+
+  const {error:saleError} =
+    await supabaseClient
+      .from("sales")
+      .insert({
+        customer_id:customerId,
+        plate,
+        total,
+        profit
+      })
+      .select()
+      .single();
+
+  if(saleError){
+    toast(saleError.message);
+    return;
+  }
+
+  const newQty =
+    Number(product.quantity)-qty;
+
+  const {error:updateError} =
+    await supabaseClient
+      .from("products")
+      .update({
+        quantity:newQty
+      })
+      .eq("id",product.id);
+
+  if(updateError){
+    toast(updateError.message);
+    return;
+  }
+
+  document.getElementById("saleProduct").value="";
+  document.getElementById("saleQty").value=1;
+  document.getElementById("salePrice").value=0;
+  document.getElementById("saleDiscount").value=0;
+  document.getElementById("salePlate").value="";
+
+  toast("ขายสำเร็จ และตัดสต็อกแล้ว");
+
+  await loadProducts();
+  await loadSales();
+  await loadDashboard();
+}
+
+function renderSales(){
+  document.getElementById("salesTable").innerHTML =
+    sales.map(s=>`
+      <tr>
+        <td>${formatDate(s.created_at)}</td>
+        <td>รายการขาย</td>
+        <td>-</td>
+        <td>${money(s.total)}</td>
+        <td>${money(s.profit)}</td>
+      </tr>
+    `).join("");
+}
+
+/* =========================================================
+   EXPENSES
+   ========================================================= */
+
+async function loadExpenses(){
+  const {data,error} =
+    await supabaseClient
+      .from("expenses")
+      .select("*")
+      .order("created_at",{ascending:false});
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  expenses=data || [];
+  renderExpenses();
+  calculateReports();
+}
+
+function renderExpenses(){
+  document.getElementById("expensesTable").innerHTML =
+    expenses.map(e=>`
+      <tr>
+        <td>${formatDate(e.created_at)}</td>
+        <td>${escapeHtml(e.description)}</td>
+        <td>${escapeHtml(e.category || "-")}</td>
+        <td>${money(e.amount)}</td>
+        <td>
+          <button class="danger"
+            onclick="deleteExpense('${e.id}')">
+            🗑️
+          </button>
+        </td>
+      </tr>
+    `).join("");
+}
+
+function openExpenseModal(){
+  document.getElementById("expenseModal").classList.remove("hidden");
+}
+
+async function saveExpense(){
+  const description =
+    document.getElementById("eDescription").value.trim();
+
+  const category =
+    document.getElementById("eCategory").value;
+
+  const amount =
+    Number(document.getElementById("eAmount").value || 0);
+
+  if(!description || amount<=0){
+    toast("กรุณากรอกข้อมูลให้ครบ");
+    return;
+  }
+
+  const {error} =
+    await supabaseClient
+      .from("expenses")
+      .insert({
+        description,
+        category,
+        amount
+      });
+
+  if(error){
+    toast(error.message);
+    return;
+  }
+
+  closeModal("expenseModal");
+
+  document.getElementById("eDescription").value="";
+  document.getElementById("eAmount").value="";
+
+  toast("บันทึกค่าใช้จ่ายแล้ว");
+
+  await loadExpenses();
+  await loadDashboard();
+}
+
+async function deleteExpense(id){
+  if(!confirm("ลบค่าใช้จ่ายรายการนี้หรือไม่?")) return;
+
+  const {error} =
+    await supabaseClient
+      .from("expenses")
+      .delete()
+      .eq("id",id);
+
+  if(error){
+    toast(error.message);
+    return;
+  }
+
+  await loadExpenses();
+  await loadDashboard();
+}
+
+/* =========================================================
+   DASHBOARD / REPORT
+   ========================================================= */
+
+function loadDashboard(){
+  document.getElementById("totalProducts").textContent =
+    products.length;
+
+  document.getElementById("totalStock").textContent =
+    products.reduce((sum,p)=>sum+Number(p.quantity||0),0);
+
+  const salesTotal =
+    sales.reduce((sum,s)=>sum+Number(s.total||0),0);
+
+  const profit =
+    sales.reduce((sum,s)=>sum+Number(s.profit||0),0);
+
+  document.getElementById("totalSales").textContent =
+    money(salesTotal);
+
+  document.getElementById("totalProfit").textContent =
+    money(profit);
+
+  const low =
+    products.filter(p=>
+      Number(p.quantity)<=Number(p.min_stock)
+    );
+
+  document.getElementById("lowStockTable").innerHTML =
+    low.map(p=>`
+      <tr>
+        <td>${escapeHtml(p.name)}</td>
+        <td>${p.quantity}</td>
+        <td>${p.min_stock}</td>
+      </tr>
+    `).join("") ||
+    `<tr><td colspan="3">ไม่มีสินค้าใกล้หมด</td></tr>`;
+}
+
+function calculateReports(){
+  const totalSales =
+    sales.reduce((sum,s)=>sum+Number(s.total||0),0);
+
+  const profit =
+    sales.reduce((sum,s)=>sum+Number(s.profit||0),0);
+
+  const expense =
+    expenses.reduce((sum,e)=>sum+Number(e.amount||0),0);
+
+  const net =
+    profit-expense;
+
+  document.getElementById("reportSales").textContent =
+    money(totalSales);
+
+  document.getElementById("reportProfit").textContent =
+    money(profit);
+
+  document.getElementById("reportExpense").textContent =
+    money(expense);
+
+  document.getElementById("reportNet").textContent =
+    money(net);
+}
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+
+function showPage(id,button){
+  document.querySelectorAll(".page")
+    .forEach(p=>p.classList.remove("active"));
+
+  document.getElementById(id)
+    .classList.add("active");
+
+  document.querySelectorAll(".nav")
+    .forEach(b=>b.classList.remove("active"));
+
+  button.classList.add("active");
+
+  if(id==="dashboard") loadDashboard();
+  if(id==="reports") calculateReports();
+}
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+
+function closeModal(id){
+  document.getElementById(id).classList.add("hidden");
+}
+
+function money(value){
+  return Number(value||0).toLocaleString("th-TH") + " ฿";
+}
+
+function formatDate(value){
+  if(!value) return "-";
+  return new Date(value).toLocaleString("th-TH");
+}
+
+function escapeHtml(value){
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function toast(message){
+  const el=document.getElementById("toast");
+  el.textContent=message;
+  el.style.display="block";
+
+  clearTimeout(window.toastTimer);
+
+  window.toastTimer=setTimeout(()=>{
+    el.style.display="none";
+  },3000);
+}
+
+/* =========================================================
+   START
+   ========================================================= */
+
+initApp();
+
+</script>
+
+</body>
+</html>
