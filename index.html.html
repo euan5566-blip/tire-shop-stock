@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ร้านยางออนไลน์</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f4f6fb;color:#172033}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:0}.hidden{display:none!important}
+.auth{min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#eef3ff,#f8fbff)}
+.card{background:#fff;border-radius:20px;box-shadow:0 12px 40px #00000018;padding:26px}
+.auth .card{width:min(440px,100%)}h1,h2,h3{margin-top:0}
+.logo{font-size:28px;font-weight:800;margin-bottom:4px}.muted{color:#6b7280}.field{margin:12px 0}.field label{display:block;font-weight:650;margin-bottom:6px}
+input,select,textarea{width:100%;padding:12px 13px;border:1px solid #d6dbea;border-radius:10px;background:#fff;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#4f6ef7;box-shadow:0 0 0 3px #4f6ef720}
+.row{display:flex;gap:10px;align-items:center}.row>*{flex:1}.btn{padding:12px 16px;border-radius:10px;font-weight:700}.primary{background:#17213d;color:#fff}.secondary{background:#e9edff;color:#2943a5}.danger{background:#fee2e2;color:#b91c1c}.success{background:#dcfce7;color:#166534}
+.link{background:none;color:#3156d9;text-decoration:underline;padding:5px}.msg{padding:10px;border-radius:9px;background:#fef3c7;color:#92400e;margin:10px 0}.ok{background:#dcfce7;color:#166534}
+.layout{display:flex;min-height:100vh}.side{width:245px;background:#111a31;color:#fff;padding:18px;position:fixed;inset:0 auto 0 0}.brand{font-size:21px;font-weight:800;padding:10px 8px 20px}.nav button{display:block;width:100%;text-align:left;background:transparent;color:#dce3ff;padding:12px;border-radius:10px;margin:4px 0}.nav button.active,.nav button:hover{background:#263354;color:#fff}
+.main{margin-left:245px;width:calc(100% - 245px);padding:22px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.stat{padding:18px}.stat b{display:block;font-size:25px;margin-top:8px}
+.panel{margin-top:18px;padding:18px}.toolbar{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-bottom:12px}.toolbar .row{max-width:600px}
+table{width:100%;border-collapse:collapse}th,td{padding:11px 8px;border-bottom:1px solid #edf0f5;text-align:left}th{color:#64748b;font-size:13px}
+.section{display:none}.section.active{display:block}.badge{display:inline-block;padding:4px 8px;border-radius:99px;background:#eef2ff;color:#3347a7;font-size:12px}
+.modal{position:fixed;inset:0;background:#0008;display:grid;place-items:center;padding:18px;z-index:10}.modal .card{width:min(520px,100%);max-height:90vh;overflow:auto}
+@media(max-width:900px){.side{width:72px}.brand{font-size:0}.brand:after{content:"🚗";font-size:25px}.nav button{font-size:0;text-align:center}.nav button:before{font-size:20px}.main{margin-left:72px;width:calc(100% - 72px)}.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.main{padding:12px}.grid{grid-template-columns:1fr 1fr}.top{align-items:flex-start}.row{flex-wrap:wrap}.card{padding:18px}table{font-size:13px}.panel{overflow:auto}}
+</style>
+</head>
+<body>
+<div id="auth" class="auth">
+  <div class="card">
+    <div class="logo">🚗 ร้านยางออนไลน์</div>
+    <div class="muted" style="margin-bottom:18px">ระบบจัดการสต็อก ขาย ใบเสร็จ ลูกค้า และกำไร</div>
+    <div id="authMsg"></div>
+    <div id="loginBox">
+      <div class="field"><label>อีเมล</label><input id="loginEmail" type="email" autocomplete="username"></div>
+      <div class="field"><label>รหัสผ่าน</label><input id="loginPass" type="password" autocomplete="current-password"></div>
+      <div class="row"><button class="btn primary" onclick="login()">เข้าสู่ระบบ</button><button class="btn secondary" onclick="showAuth('signup')">สมัครบัญชี</button></div>
+      <div style="text-align:center;margin-top:10px"><button class="link" onclick="showAuth('forgot')">ลืมรหัสผ่าน?</button></div>
+    </div>
+    <div id="signupBox" class="hidden">
+      <div class="field"><label>ชื่อเจ้าของร้าน</label><input id="suName"></div>
+      <div class="field"><label>อีเมล</label><input id="suEmail" type="email"></div>
+      <div class="field"><label>รหัสผ่าน</label><input id="suPass" type="password"></div>
+      <div class="field"><label>ยืนยันรหัสผ่าน</label><input id="suPass2" type="password"></div>
+      <div class="row"><button class="btn primary" onclick="signup()">สร้างบัญชี</button><button class="btn secondary" onclick="showAuth('login')">กลับเข้าสู่ระบบ</button></div>
+    </div>
+    <div id="forgotBox" class="hidden">
+      <p class="muted">กรอกอีเมลของบัญชี แล้วตั้งรหัสผ่านใหม่</p>
+      <div class="field"><label>อีเมล</label><input id="fpEmail" type="email"></div>
+      <div class="field"><label>รหัสผ่านใหม่</label><input id="fpPass" type="password"></div>
+      <div class="field"><label>ยืนยันรหัสผ่านใหม่</label><input id="fpPass2" type="password"></div>
+      <div class="row"><button class="btn primary" onclick="resetPassword()">เปลี่ยนรหัสผ่าน</button><button class="btn secondary" onclick="showAuth('login')">กลับ</button></div>
+      <p class="muted" style="font-size:12px;margin-top:12px">หมายเหตุ: รุ่นนี้เก็บบัญชีในเบราว์เซอร์เครื่องนี้ หากต้องการรีเซ็ตผ่านอีเมลจริง ต้องต่อระบบฐานข้อมูล/อีเมลภายหลัง</p>
+    </div>
+  </div>
+</div>
+
+<div id="app" class="layout hidden">
+<aside class="side">
+  <div class="brand">🚗 ร้านยางออนไลน์</div>
+  <div class="nav">
+    <button data-s="dashboard" onclick="go('dashboard')">📊 แดชบอร์ด</button>
+    <button data-s="inventory" onclick="go('inventory')">🛞 สต็อกสินค้า</button>
+    <button data-s="sales" onclick="go('sales')">🧾 ขาย/ใบเสร็จ</button>
+    <button data-s="customers" onclick="go('customers')">👤 ลูกค้า/ทะเบียนรถ</button>
+    <button data-s="expenses" onclick="go('expenses')">💸 ค่าใช้จ่าย</button>
+    <button data-s="employees" onclick="go('employees')">👥 พนักงาน</button>
+  </div>
+  <button class="btn danger" style="width:100%;margin-top:20px" onclick="logout()">ออกจากระบบ</button>
+</aside>
+<main class="main">
+  <div class="top"><div><h2 id="title">แดชบอร์ด</h2><div class="muted" id="userInfo"></div></div><button class="btn secondary" onclick="backup()">สำรองข้อมูล</button></div>
+
+  <section id="dashboard" class="section active">
+    <div class="grid">
+      <div class="card stat"><span class="muted">ยอดขายรวม</span><b id="stSales">0</b> ฿</div>
+      <div class="card stat"><span class="muted">กำไรโดยประมาณ</span><b id="stProfit">0</b> ฿</div>
+      <div class="card stat"><span class="muted">ค่าใช้จ่าย</span><b id="stExp">0</b> ฿</div>
+      <div class="card stat"><span class="muted">สินค้าในสต็อก</span><b id="stStock">0</b> ชิ้น</div>
+    </div>
+    <div class="card panel"><h3>รายการขายล่าสุด</h3><div id="recentSales"></div></div>
+  </section>
+
+  <section id="inventory" class="section">
+    <div class="card panel">
+      <div class="toolbar"><h3>สต็อกสินค้า</h3><button class="btn primary" onclick="openProduct()">+ เพิ่มสินค้า</button></div>
+      <div id="inventoryTable"></div>
+    </div>
+  </section>
+
+  <section id="sales" class="section">
+    <div class="card panel">
+      <div class="toolbar"><h3>ขายสินค้า / ออกใบเสร็จ</h3><button class="btn primary" onclick="openSale()">+ เปิดบิลขาย</button></div>
+      <div id="salesTable"></div>
+    </div>
+  </section>
+
+  <section id="customers" class="section">
+    <div class="card panel">
+      <div class="toolbar"><h3>ลูกค้า / ทะเบียนรถ</h3><button class="btn primary" onclick="openCustomer()">+ เพิ่มลูกค้า</button></div>
+      <div id="customerTable"></div>
+    </div>
+  </section>
+
+  <section id="expenses" class="section">
+    <div class="card panel">
+      <div class="toolbar"><h3>ค่าใช้จ่าย</h3><button class="btn primary" onclick="openExpense()">+ เพิ่มค่าใช้จ่าย</button></div>
+      <div id="expenseTable"></div>
+    </div>
+  </section>
+
+  <section id="employees" class="section">
+    <div class="card panel">
+      <div class="toolbar"><h3>พนักงาน</h3><button class="btn primary" onclick="openEmployee()">+ สร้างบัญชีพนักงาน</button></div>
+      <div id="employeeTable"></div>
+    </div>
+  </section>
+</main>
+</div>
+
+<div id="modal" class="modal hidden"><div class="card" id="modalBody"></div></div>
+
+<script>
+const K='tire_shop_v2';
+let db=JSON.parse(localStorage.getItem(K)||'null')||{users:[],products:[],sales:[],customers:[],expenses:[],employees:[],session:null};
+function save(){localStorage.setItem(K,JSON.stringify(db))}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function money(n){return Number(n||0).toLocaleString('th-TH')}
+function msg(t,ok=false){document.getElementById('authMsg').innerHTML=t?`<div class="msg ${ok?'ok':''}">${esc(t)}</div>`:''}
+function showAuth(x){['login','signup','forgot'].forEach(v=>document.getElementById(v+'Box').classList.toggle('hidden',v!==x));msg('')}
+function signup(){
+ let n=suName.value.trim(),e=suEmail.value.trim().toLowerCase(),p=suPass.value;
+ if(!n||!e||!p)return msg('กรอกข้อมูลให้ครบ');
+ if(p!==suPass2.value)return msg('รหัสผ่านไม่ตรงกัน');
+ if(db.users.some(u=>u.email===e))return msg('อีเมลนี้มีบัญชีแล้ว');
+ db.users.push({id:crypto.randomUUID(),name:n,email:e,password:p,role:'owner'});save();
+ loginEmail.value=e;loginPass.value=p;showAuth('login');msg('สร้างบัญชีสำเร็จ กรุณาเข้าสู่ระบบ',true);
+}
+function login(){
+ let e=loginEmail.value.trim().toLowerCase(),p=loginPass.value,u=db.users.find(x=>x.email===e&&x.password===p);
+ if(!u)return msg('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+ db.session=u.id;save();startApp();
+}
+function resetPassword(){
+ let e=fpEmail.value.trim().toLowerCase(),p=fpPass.value,u=db.users.find(x=>x.email===e);
+ if(!u)return msg('ไม่พบบัญชีนี้');
+ if(!p||p!==fpPass2.value)return msg('กรุณาตรวจสอบรหัสผ่านใหม่');
+ u.password=p;save();showAuth('login');loginEmail.value=e;msg('เปลี่ยนรหัสผ่านสำเร็จ',true);
+}
+function logout(){db.session=null;save();location.reload()}
+function startApp(){
+ auth.classList.add('hidden');app.classList.remove('hidden');
+ let u=db.users.find(x=>x.id===db.session);userInfo.textContent=`เข้าสู่ระบบ: ${u?.name||''} (${u?.role==='owner'?'เจ้าของร้าน':'พนักงาน'})`;
+ go('dashboard');
+}
+function go(s){
+ document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));document.getElementById(s).classList.add('active');
+ document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.s===s));
+ title.textContent={dashboard:'แดชบอร์ด',inventory:'สต็อกสินค้า',sales:'ขาย/ใบเสร็จ',customers:'ลูกค้า/ทะเบียนรถ',expenses:'ค่าใช้จ่าย',employees:'พนักงาน'}[s];
+ render();
+}
+function render(){
+ let sold=db.sales.reduce((a,x)=>a+Number(x.total),0), exp=db.expenses.reduce((a,x)=>a+Number(x.amount),0);
+ let cost=db.sales.reduce((a,x)=>a+Number(x.cost||0),0);
+ stSales.textContent=money(sold);stExp.textContent=money(exp);stProfit.textContent=money(sold-cost-exp);
+ stStock.textContent=money(db.products.reduce((a,x)=>a+Number(x.qty||0),0));
+ recentSales.innerHTML=db.sales.length?`<table><tr><th>วันที่</th><th>ลูกค้า</th><th>ยอด</th></tr>${db.sales.slice(-8).reverse().map(x=>`<tr><td>${esc(x.date)}</td><td>${esc(x.customer||'-')}</td><td>${money(x.total)} ฿</td></tr>`).join('')}</table>`:'<p class="muted">ยังไม่มีรายการขาย</p>';
+ inventoryTable.innerHTML=`<table><tr><th>สินค้า</th><th>ยี่ห้อ/รุ่น</th><th>ต้นทุน</th><th>ราคาขาย</th><th>คงเหลือ</th><th></th></tr>${db.products.map((x,i)=>`<tr><td>${esc(x.name)}</td><td>${esc(x.brand||'')}</td><td>${money(x.cost)}</td><td>${money(x.price)}</td><td>${money(x.qty)}</td><td><button class="link" onclick="delProduct(${i})">ลบ</button></td></tr>`).join('')}</table>`;
+ salesTable.innerHTML=`<table><tr><th>เลขที่</th><th>วันที่</th><th>ลูกค้า</th><th>ยอด</th><th></th></tr>${db.sales.slice().reverse().map((x,ri)=>{let i=db.sales.length-1-ri;return `<tr><td>${esc(x.no)}</td><td>${esc(x.date)}</td><td>${esc(x.customer||'-')}</td><td>${money(x.total)} ฿</td><td><button class="link" onclick="receipt(${i})">ใบเสร็จ</button></td></tr>`}).join('')}</table>`;
+ customerTable.innerHTML=`<table><tr><th>ชื่อ</th><th>โทร</th><th>ทะเบียน</th><th>รถ</th><th></th></tr>${db.customers.map((x,i)=>`<tr><td>${esc(x.name)}</td><td>${esc(x.phone)}</td><td>${esc(x.plate)}</td><td>${esc(x.car)}</td><td><button class="link" onclick="delCustomer(${i})">ลบ</button></td></tr>`).join('')}</table>`;
+ expenseTable.innerHTML=`<table><tr><th>วันที่</th><th>รายการ</th><th>จำนวนเงิน</th><th></th></tr>${db.expenses.map((x,i)=>`<tr><td>${esc(x.date)}</td><td>${esc(x.name)}</td><td>${money(x.amount)} ฿</td><td><button class="link" onclick="delExpense(${i})">ลบ</button></td></tr>`).join('')}</table>`;
+ employeeTable.innerHTML=`<table><tr><th>ชื่อ</th><th>อีเมล</th><th>สถานะ</th><th></th></tr>${db.employees.map((x,i)=>`<tr><td>${esc(x.name)}</td><td>${esc(x.email)}</td><td><span class="badge">พนักงาน</span></td><td><button class="link" onclick="delEmployee(${i})">ลบ</button></td></tr>`).join('')}</table>`;
+}
+function closeModal(){modal.classList.add('hidden')}
+function openProduct(){modalBody.innerHTML=`<h3>เพิ่มสินค้า</h3><div class="field"><label>ชื่อสินค้า</label><input id="pName" placeholder="เช่น ยาง 195/65R15"></div><div class="field"><label>ยี่ห้อ/รุ่น</label><input id="pBrand"></div><div class="row"><div class="field"><label>ต้นทุน</label><input id="pCost" type="number"></div><div class="field"><label>ราคาขาย</label><input id="pPrice" type="number"></div></div><div class="field"><label>จำนวน</label><input id="pQty" type="number"></div><div class="row"><button class="btn primary" onclick="addProduct()">บันทึก</button><button class="btn secondary" onclick="closeModal()">ยกเลิก</button></div>`;modal.classList.remove('hidden')}
+function addProduct(){if(!pName.value)return alert('กรุณาใส่ชื่อสินค้า');db.products.push({name:pName.value,brand:pBrand.value,cost:+pCost.value||0,price:+pPrice.value||0,qty:+pQty.value||0});save();closeModal();render()}
+function delProduct(i){if(confirm('ลบสินค้านี้?')){db.products.splice(i,1);save();render()}}
+function openCustomer(){modalBody.innerHTML=`<h3>เพิ่มลูกค้า</h3><div class="field"><label>ชื่อลูกค้า</label><input id="cName"></div><div class="field"><label>โทรศัพท์</label><input id="cPhone"></div><div class="field"><label>ทะเบียนรถ</label><input id="cPlate"></div><div class="field"><label>ยี่ห้อ/รุ่นรถ</label><input id="cCar"></div><div class="row"><button class="btn primary" onclick="addCustomer()">บันทึก</button><button class="btn secondary" onclick="closeModal()">ยกเลิก</button></div>`;modal.classList.remove('hidden')}
+function addCustomer(){if(!cName.value)return alert('กรุณาใส่ชื่อลูกค้า');db.customers.push({name:cName.value,phone:cPhone.value,plate:cPlate.value,car:cCar.value});save();closeModal();render()}
+function delCustomer(i){if(confirm('ลบลูกค้านี้?')){db.customers.splice(i,1);save();render()}}
+function openExpense(){modalBody.innerHTML=`<h3>เพิ่มค่าใช้จ่าย</h3><div class="field"><label>รายการ</label><input id="eName" placeholder="ค่าไฟ/ค่าแรง/ขนส่ง"></div><div class="field"><label>จำนวนเงิน</label><input id="eAmount" type="number"></div><div class="row"><button class="btn primary" onclick="addExpense()">บันทึก</button><button class="btn secondary" onclick="closeModal()">ยกเลิก</button></div>`;modal.classList.remove('hidden')}
+function addExpense(){db.expenses.push({name:eName.value,amount:+eAmount.value||0,date:new Date().toLocaleDateString('th-TH')});save();closeModal();render()}
+function delExpense(i){if(confirm('ลบค่าใช้จ่ายนี้?')){db.expenses.splice(i,1);save();render()}}
+function openEmployee(){modalBody.innerHTML=`<h3>สร้างบัญชีพนักงาน</h3><div class="field"><label>ชื่อพนักงาน</label><input id="emName"></div><div class="field"><label>อีเมล</label><input id="emEmail" type="email"></div><div class="field"><label>รหัสผ่าน</label><input id="emPass" type="password"></div><div class="row"><button class="btn primary" onclick="addEmployee()">สร้างบัญชี</button><button class="btn secondary" onclick="closeModal()">ยกเลิก</button></div>`;modal.classList.remove('hidden')}
+function addEmployee(){if(!emName.value||!emEmail.value||!emPass.value)return alert('กรอกข้อมูลให้ครบ');if(db.users.some(u=>u.email===emEmail.value.toLowerCase()))return alert('อีเมลนี้มีบัญชีแล้ว');let u={id:crypto.randomUUID(),name:emName.value,email:emEmail.value.toLowerCase(),password:emPass.value,role:'employee'};db.users.push(u);db.employees.push({name:u.name,email:u.email});save();closeModal();render()}
+function delEmployee(i){if(confirm('ลบบัญชีพนักงานนี้?')){let e=db.employees[i];db.users=db.users.filter(u=>u.email!==e.email);db.employees.splice(i,1);save();render()}}
+function openSale(){
+ let opts=db.products.map((x,i)=>`<option value="${i}">${esc(x.name)} — ${money(x.price)}฿ (เหลือ ${x.qty})</option>`).join('');
+ let cust=db.customers.map(x=>`<option>${esc(x.name)} ${x.plate?'('+esc(x.plate)+')':''}</option>`).join('');
+ modalBody.innerHTML=`<h3>เปิดบิลขาย</h3><div class="field"><label>ลูกค้า</label><select id="sCustomer"><option value="">ลูกค้าทั่วไป</option>${cust}</select></div><div class="field"><label>สินค้า</label><select id="sProduct">${opts}</select></div><div class="row"><div class="field"><label>จำนวน</label><input id="sQty" type="number" value="1" min="1"></div><div class="field"><label>ส่วนลด</label><input id="sDiscount" type="number" value="0"></div></div><div class="row"><button class="btn primary" onclick="addSale()">บันทึกการขาย</button><button class="btn secondary" onclick="closeModal()">ยกเลิก</button></div>`;
+ modal.classList.remove('hidden')
+}
+function addSale(){
+ let p=db.products[+sProduct.value],q=Math.max(1,+sQty.value||1),d=+sDiscount.value||0;
+ if(!p||p.qty<q)return alert('สินค้าไม่พอในสต็อก');
+ let total=Math.max(0,p.price*q-d),cost=p.cost*q;
+ p.qty-=q;
+ db.sales.push({no:'INV-'+Date.now().toString().slice(-7),date:new Date().toLocaleString('th-TH'),customer:sCustomer.value,total,cost,items:[{name:p.name,qty:q,price:p.price}]});
+ save();closeModal();render();
+}
+function receipt(i){
+ let x=db.sales[i],w=window.open('','_blank','width=420,height=650');
+ w.document.write(`<html><head><title>${x.no}</title><style>body{font-family:Arial;padding:25px}h2{text-align:center}table{width:100%;border-collapse:collapse}td{padding:8px 0;border-bottom:1px dashed #aaa}.right{text-align:right}</style></head><body><h2>🚗 ร้านยางออนไลน์</h2><div>เลขที่: ${esc(x.no)}</div><div>วันที่: ${esc(x.date)}</div><div>ลูกค้า: ${esc(x.customer||'ลูกค้าทั่วไป')}</div><hr><table>${x.items.map(a=>`<tr><td>${esc(a.name)} × ${a.qty}</td><td class="right">${money(a.price*a.qty)} ฿</td></tr>`).join('')}</table><h3 class="right">รวม ${money(x.total)} ฿</h3><p style="text-align:center">ขอบคุณที่ใช้บริการ</p><script>window.print()</script></body></html>`);
+ w.document.close()
+}
+function backup(){
+ let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='tire-shop-backup.json';a.click();URL.revokeObjectURL(a.href)
+}
+if(db.session&&db.users.some(u=>u.id===db.session))startApp();
+else showAuth('login');
+</script>
+</body>
+</html>
