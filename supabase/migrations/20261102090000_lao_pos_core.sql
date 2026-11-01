@@ -14,6 +14,7 @@ create table if not exists public.suppliers (
   note text,
   created_at timestamptz not null default now()
 );
+create sequence if not exists public.purchase_no_seq;
 create table if not exists public.purchases (
   id uuid primary key default gen_random_uuid(),
   purchase_no text not null unique default ('P-' || lpad(nextval('public.purchase_no_seq')::text,6,'0')),
@@ -29,7 +30,6 @@ create table if not exists public.purchases (
   created_by uuid references public.profiles(id),
   created_at timestamptz not null default now()
 );
-create sequence if not exists public.purchase_no_seq;
 create table if not exists public.purchase_items (
   id uuid primary key default gen_random_uuid(),
   purchase_id uuid not null references public.purchases(id) on delete cascade,
@@ -38,6 +38,7 @@ create table if not exists public.purchase_items (
   unit_cost numeric not null default 0,
   line_total numeric not null default 0
 );
+create sequence if not exists public.quote_no_seq;
 create table if not exists public.quotations (
   id uuid primary key default gen_random_uuid(),
   quote_no text not null unique default ('Q-' || lpad(nextval('public.quote_no_seq')::text,6,'0')),
@@ -55,7 +56,6 @@ create table if not exists public.quotations (
   created_by uuid references public.profiles(id),
   created_at timestamptz not null default now()
 );
-create sequence if not exists public.quote_no_seq;
 create table if not exists public.quotation_items (
   id uuid primary key default gen_random_uuid(),
   quotation_id uuid not null references public.quotations(id) on delete cascade,
