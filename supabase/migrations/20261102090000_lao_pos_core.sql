@@ -175,3 +175,66 @@ end;
 $$;
 
 grant execute on function public.create_shop_sale(uuid,uuid,text,text,numeric,numeric,numeric,text,jsonb) to authenticated;
+
+
+create or replace function public.create_shop_purchase(
+  p_supplier_id uuid,
+  p_currency text,
+  p_exchange_rate numeric,
+  p_paid_amount numeric,
+  p_note text,
+  p_items jsonb
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_purchase_id uuid;
+  v_purchase_no text;
+  v_subtotal numeric := 0;
+  v_total numeric := 0;
+  v_paid numeric := greatest(coalesce(p_paid_amount,0),0);
+  v_item jsonb;
+  v_product public.products%rowtype;
+  v_qty integer;
+  v_unit_cost numeric;
+  v_line numeric;
+begin
+  if auth.uid() is null or not public.is_active_user() then
+    raise exception 'ກະລຸນາເຂົ້າລະບົບ';
+  end if;
+  if jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items)=0 then
+    raise exception 'ກະລຸນາເພີ່ມລາຍການສິນຄ້າ';
+  end if;
+  insert into public.purchases(supplier_id,currency,exchange_rate,subtotal,total,paid_amount,balance_due,note,created_by)
+  values(p_supplier_id,coalesce(p_currency,'LAK'),greatest(coalesce(p_exchange_rate,1),0.000001),0,0,0,0,coalesce(p_note,''),auth.uid())
+  returning id,purchase_no into v_purchase_id,v_purchase_no;
+
+  for v_item in select * from jsonb_array_elements(p_items) loop
+    v_qty := greatest(coalesce((v_item->>'qty')::integer,0),0);
+    if v_qty<1 then raise exception 'ຈຳນວນຮັບເຂົ້າບໍ່ຖືກຕ້ອງ'; end if;
+    select * into v_product from public.products where id=(v_item->>'product_id')::uuid and active=true for update;
+    if not found then raise exception 'ບໍ່ພົບສິນຄ້າ'; end if;
+    v_unit_cost:=greatest(coalesce((v_item->>'unit_cost')::numeric,0),0);
+    v_line:=v_qty*v_unit_cost;
+    v_subtotal:=v_subtotal+v_line;
+    insert into public.purchase_items(purchase_id,product_id,qty,unit_cost,line_total)
+    values(v_purchase_id,v_product.id,v_qty,v_unit_cost,v_line);
+    update public.products set stock=stock+v_qty,
+      cost=case when coalesce(p_currency,'LAK')='THB' then cost else v_unit_cost end,
+      cost_lak=case when coalesce(p_currency,'LAK')='LAK' then v_unit_cost else cost_lak end,
+      cost_thb=case when coalesce(p_currency,'LAK')='THB' then v_unit_cost else cost_thb end,
+      updated_at=now()
+    where id=v_product.id;
+    insert into public.stock_movements(product_id,movement_type,qty,note,ref_id,created_by)
+    values(v_product.id,'ຮັບເຂົ້າ',v_qty,'ຮັບສິນຄ້າເລກທີ '||v_purchase_no,v_purchase_id,auth.uid());
+  end loop;
+
+  v_total:=v_subtotal;
+  update public.purchases set subtotal=v_subtotal,total=v_total,paid_amount=least(v_paid,v_total),balance_due=greatest(v_total-v_paid,0)
+  where id=v_purchase_id;
+  return jsonb_build_object('id',v_purchase_id,'purchase_no',v_purchase_no,'total',v_total,'balance_due',greatest(v_total-v_paid,0));
+end;
+$$;
+grant execute on function public.create_shop_purchase(uuid,text,numeric,numeric,text,jsonb) to authenticated;
