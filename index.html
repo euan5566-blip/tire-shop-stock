@@ -106,7 +106,16 @@ async function receivablesPage(e){
 }
 async function quotesPage(e){
  let qs=await sel('quotations');qs.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
- e.innerHTML=head(pages.quotes,'<button onclick="quoteForm()">＋ ສ້າງໃບສະເໜີລາຄາ</button>')+'<div class="card">'+tbl(['ເລກໃບສະເໜີ','ລູກຄ້າ','ວັນທີ','ຍອດ','ສະກຸນ','ສະຖານະ','ຈັດການ'],qs.map(q=>'<tr><td>'+esc(q.quotation_no)+'</td><td>'+esc(q.customer_name||'—')+'</td><td>'+dateFmt(q.created_at)+'</td><td>'+fmt(q.total)+'</td><td>'+esc(q.currency)+'</td><td>'+esc(q.status)+'</td><td><button type="button" class="secondary" onclick="viewQuote(&quot;'+q.id+'&quot;)">ເບິ່ງ</button> <button type="button" class="secondary" onclick="editQuote(&quot;'+q.id+'&quot;)">ແກ້ໄຂ</button> <button type="button" onclick="printQuote(&quot;'+q.id+'&quot;)">ພິມ</button></td></tr>'))+'</div>';
+ e.innerHTML=head(pages.quotes,'<button onclick="quoteForm()">＋ ສ້າງໃບສະເໜີລາຄາ</button>')+'<div class="card">'+tbl(['ເລກໃບສະເໜີ','ລູກຄ້າ','ວັນທີ','ຍອດ','ສະກຸນ','ສະຖານະ','ຈັດການ'],qs.map(q=>'<tr data-qid="'+esc(q.id)+'"><td>'+esc(q.quotation_no)+'</td><td>'+esc(q.customer_name||'—')+'</td><td>'+dateFmt(q.created_at)+'</td><td>'+fmt(q.total)+'</td><td>'+esc(q.currency)+'</td><td>'+esc(q.status)+'</td><td><button type="button" class="secondary" onclick="viewQuote(this.parentElement.parentElement.dataset.qid)">ເບິ່ງ</button> <button type="button" class="secondary" onclick="editQuote(this.parentElement.parentElement.dataset.qid)">ແກ້ໄຂ</button> <button type="button" onclick="printQuote(this.parentElement.parentElement.dataset.qid)">ພິມ</button> <button type="button" class="secondary" onclick="deleteQuote(this.parentElement.parentElement.dataset.qid)">ລົບ</button></td></tr>'))+'</div>';
+}
+async function deleteQuote(id){
+ let q=quotations.find(x=>String(x.id)===String(id));if(!q)return;
+ if(!confirm('ຢືນຢັນລົບໃບສະເໜີ '+(q.quotation_no||'')+'? ການລົບຈະບໍ່ສາມາດກູ້ຄືນໄດ້.'))return;
+ try{
+  let items=await sb.from('quotation_items').delete().eq('quotation_id',id);if(items.error)throw items.error;
+  let head=await sb.from('quotations').delete().eq('id',id);if(head.error)throw head.error;
+  toast('ລົບໃບສະເໜີລາຄາສຳເລັດ');await render();
+ }catch(x){toast('ລົບບໍ່ສຳເລັດ: '+(x.message||x))}
 }
 function quoteForm(){
  quotePrevCurrency='LAK';quoteDraft=[{product_id:'',description:'',qty:1,unit_price:0}];
