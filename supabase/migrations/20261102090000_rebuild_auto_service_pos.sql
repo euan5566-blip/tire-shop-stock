@@ -371,7 +371,7 @@ create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path=public,auth as $$
 begin
  insert into public.profiles(id,full_name,role,active)
- values(new.id,coalesce(new.raw_user_meta_data->>'full_name',''),'staff',true)
+ values(new.id,coalesce(new.raw_user_meta_data->>'full_name',''),case when not exists(select 1 from public.profiles) then 'owner' else 'staff' end,true)
  on conflict(id) do nothing;
  return new;
 end $$;
@@ -403,19 +403,31 @@ alter table public.stock_movements enable row level security;
 alter table public.invoices enable row level security;
 alter table public.activity_logs enable row level security;
 
--- Authenticated staff use the shop workspace. Role-sensitive UI and RPC checks are applied in the app.
-do $$
+-- Helper predicates avoid recursive profile RLS policy evaluation.
+create or replace function public.is_active_staff()
+returns boolean language sql stable security definer set search_path=public as $
+ select exists(select 1 from public.profiles where id=auth.uid() and active=true)
+$;
+create or replace function public.is_owner()
+returns boolean language sql stable security definer set search_path=public as $
+ select exists(select 1 from public.profiles where id=auth.uid() and active=true and role='owner')
+$;
+
+-- Authenticated staff use the shop workspace. Role-sensitive RPC checks are applied server-side.
+do $
 declare t text;
 begin
  foreach t in array array['app_settings','exchange_rates','categories','suppliers','products','customers','vehicles','service_catalog','repair_orders','repair_order_items','repair_order_payments','sales','sale_items','sale_payments','online_orders','online_order_items','online_order_events','returns','return_items','purchase_orders','purchase_items','stock_movements','invoices','activity_logs'] loop
-  execute format('create policy "staff_access_%s" on public.%I for all to authenticated using (exists(select 1 from public.profiles p where p.id=auth.uid() and p.active=true)) with check (exists(select 1 from public.profiles p where p.id=auth.uid() and p.active=true))',t,t);
+  execute format('create policy "staff_access_%s" on public.%I for all to authenticated using (public.is_active_staff()) with check (public.is_active_staff())',t,t);
  end loop;
 end $$;
-create policy "profile_self_or_owner_read" on public.profiles for select to authenticated using (id=auth.uid() or exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='owner' and p.active));
-create policy "profile_owner_manage" on public.profiles for all to authenticated using (exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='owner' and p.active)) with check (exists(select 1 from public.profiles p where p.id=auth.uid() and p.role='owner' and p.active));
+create policy "profile_self_or_owner_read" on public.profiles for select to authenticated using (id=auth.uid() or public.is_owner());
+create policy "profile_owner_manage" on public.profiles for all to authenticated using (public.is_owner()) with check (public.is_owner());
 
 grant usage on schema public to anon, authenticated;
 grant select,insert,update,delete on all tables in schema public to authenticated;
 grant usage,select on all sequences in schema public to authenticated;
 grant execute on function public.set_updated_at() to authenticated;
 grant execute on function public.handle_new_user() to authenticated;
+grant execute on function public.is_active_staff() to authenticated;
+grant execute on function public.is_owner() to authenticated;
