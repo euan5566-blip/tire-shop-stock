@@ -111,7 +111,7 @@ async function quotesPage(e){
 function quoteForm(){
  quoteDraft=[{product_id:'',description:'',qty:1,unit_price:0}];
  modal('ສ້າງໃບສະເໜີລາຄາ','<div class="formgrid">'+sfield('ລູກຄ້າ','q_customer',[{value:'',label:'ລູກຄ້າທົ່ວໄປ'},...customerOpts()])+fld('ຊື່ລູກຄ້າ','q_name')+fld('ເບີໂທ','q_phone')+sfield('ສະກຸນເງິນ','q_cur',['LAK','THB','USD'].map(x=>({value:x,label:x})))+fld('ສ່ວນຫຼຸດ','q_discount','number',0)+fld('ໃຊ້ໄດ້ເຖິງ','q_valid','date',new Date(Date.now()+7*86400000).toISOString().slice(0,10))+'</div><h3>ລາຍການ (ເລືອກສິນຄ້າ ຫຼື ເພີ່ມລາຍການເອງ)</h3><div id="q_items"></div><button class="secondary" onclick="addQuoteRow()">＋ ເພີ່ມລາຍການ</button><div id="q_total" class="stat">ລວມ: 0</div>'+fld('ໝາຍເຫດ','q_note')+'<div class="row" style="margin-top:12px"><button onclick="saveQuote()">ບັນທຶກໃບສະເໜີ</button><button class="secondary" onclick="closeModal()">ຍົກເລີກ</button></div>');
- drawQuoteRows();
+ drawQuoteRows();$('q_cur').onchange=()=>quoteCalc();
 }
 function addQuoteRow(){quoteDraft.push({product_id:'',description:'',qty:1,unit_price:0});drawQuoteRows()}
 function drawQuoteRows(){
@@ -120,7 +120,7 @@ function drawQuoteRows(){
  quoteDraft.forEach((x,i)=>{$('qp'+i).onchange=()=>{let p=products.find(p=>p.id===$('qp'+i).value);x.product_id=p?.id||'';if(p){x.description=p.name;$('qd'+i).value=p.name;$('qv'+i).value=getPrice(p)}quoteCalc()};['qd','qq','qv'].forEach(prefix=>$(prefix+i).oninput=()=>{x.description=$('qd'+i).value;x.qty=num($('qq'+i).value);x.unit_price=num($('qv'+i).value);quoteCalc()})});quoteCalc();
 }
 function removeQuoteRow(i){quoteDraft.splice(i,1);drawQuoteRows()}
-function quoteCalc(){let t=quoteDraft.reduce((a,x)=>a+num(x.qty)*num(x.unit_price),0)-num($('q_discount')?.value);if($('q_total'))$('q_total').textContent='ລວມ: '+fmt(Math.max(0,t))+' '+($('q_cur')?.value||'LAK')}
+function quoteCalc(){let cur=$('q_cur')?.value||'LAK',t=quoteDraft.reduce((a,x)=>a+num(x.qty)*num(x.unit_price),0)-num($('q_discount')?.value);quoteDraft.forEach((x,i)=>{let line=$('ql'+i);if(line)line.textContent=fmt(num(x.qty)*num(x.unit_price))+' '+cur});if($('q_total'))$('q_total').textContent='ລວມ: '+fmt(Math.max(0,t))+' '+cur}
 async function saveQuote(){
  try{let cust=customers.find(c=>c.id===$('q_customer').value),items=quoteDraft.map(x=>({...x,description:x.description.trim(),qty:num(x.qty),unit_price:num(x.unit_price)})).filter(x=>x.description&&x.qty>0);if(!items.length)throw Error('ເພີ່ມລາຍການຢ່າງໜ້ອຍ 1');let sub=items.reduce((a,x)=>a+x.qty*x.unit_price,0),discount=num($('q_discount').value),total=Math.max(0,sub-discount),cur=$('q_cur').value;let q=await ins('quotations',{quotation_no:'QT-'+Date.now(),customer_id:cust?.id||null,customer_name:cust?.name||$('q_name').value||'ລູກຄ້າ',customer_phone:cust?.phone||$('q_phone').value,currency:cur,exchange_rate:cur==='LAK'?1:cur==='THB'?num(rates.THB):1/num(rates.USD),subtotal:sub,discount,total,status:'draft',valid_until:$('q_valid').value||null,note:$('q_note').value,created_by:user.id});for(let x of items)await ins('quotation_items',{quotation_id:q.id,product_id:x.product_id||null,description:x.description,qty:x.qty,unit_price:x.unit_price,line_total:x.qty*x.unit_price});closeModal();toast('ສ້າງໃບສະເໜີລາຄາແລ້ວ');render()}catch(x){toast(x.message||x)}
 }
