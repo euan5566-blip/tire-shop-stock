@@ -87,7 +87,19 @@ async function payablesPage(e){
 }
 async function purchaseDebtForm(){
  let su=await sel('suppliers');
- modal('ບັນທຶກໜີ້ຜູ້ສະໜອງ','<div class="formgrid">'+sfield('ຜູ້ສະໜອງ','pd_sup',[{value:'',label:'— ເລືອກ —'},...su.map(x=>({value:x.id,label:x.name}))])+fld('ເລກບິນ / ເອກະສານ','pd_no')+fld('ຍອດບິນ','pd_total','number',0)+fld('ຈ່າຍແລ້ວ','pd_paid','number',0)+sfield('ສະກຸນເງິນ','pd_cur',['LAK','THB','USD'].map(x=>({value:x,label:x})))+fld('ວັນທີ','pd_date','date',new Date().toISOString().slice(0,10))+'<div class="field wide"><label>ໝາຍເຫດ</label><input id="pd_note"></div></div><button onclick="savePurchaseDebt()">ບັນທຶກໜີ້</button> <button class="secondary" onclick="closeModal()">ປິດ</button>');
+ modal('ບັນທຶກໜີ້ຜູ້ສະໜອງ','<div class="row" style="margin-bottom:12px"><button type="button" class="secondary" onclick="newSupplierFromDebt()">＋ ເພີ່ມຜູ້ສະໜອງ / ບໍລິສັດ</button></div><div class="formgrid">'+sfield('ຜູ້ສະໜອງ','pd_sup',[{value:'',label:'— ເລືອກ —'},...su.map(x=>({value:x.id,label:x.name}))])+fld('ເລກບິນ / ເອກະສານ','pd_no')+fld('ຍອດບິນ','pd_total','number',0)+fld('ຈ່າຍແລ້ວ','pd_paid','number',0)+sfield('ສະກຸນເງິນ','pd_cur',['LAK','THB','USD'].map(x=>({value:x,label:x})))+fld('ວັນທີ','pd_date','date',new Date().toISOString().slice(0,10))+'<div class="field wide"><label>ໝາຍເຫດ</label><input id="pd_note"></div></div><button onclick="savePurchaseDebt()">ບັນທຶກໜີ້</button> <button class="secondary" onclick="closeModal()">ປິດ</button>');
+}
+function newSupplierFromDebt(){
+ modal('ເພີ່ມຜູ້ສະໜອງ / ບໍລິສັດ','<div class="formgrid">'+fld('ຊື່ຜູ້ສະໜອງ / ບໍລິສັດ','ns_name')+fld('ເບີໂທ','ns_phone')+fld('ທີ່ຢູ່','ns_address')+'<div class="field wide"><label>ໝາຍເຫດ</label><input id="ns_note"></div></div><div class="row" style="margin-top:12px"><button onclick="saveNewSupplier()">ບັນທຶກຜູ້ສະໜອງ</button><button class="secondary" onclick="purchaseDebtForm()">ກັບຄືນ</button></div>');
+}
+async function saveNewSupplier(){
+ try{
+  let name=$('ns_name').value.trim();if(!name)throw Error('ກະລຸນາຂຽນຊື່ຜູ້ສະໜອງ / ບໍລິສັດ');
+  let row={name,phone:$('ns_phone').value.trim(),address:$('ns_address').value.trim(),note:$('ns_note').value.trim()};
+  let r=await sb.from('suppliers').insert(row).select().single();if(r.error)throw r.error;
+  toast('ເພີ່ມຜູ້ສະໜອງແລ້ວ');purchaseDebtForm();
+  setTimeout(()=>{let s=$('pd_sup');if(s)s.value=r.data.id},100);
+ }catch(x){toast('ບັນທຶກບໍ່ສຳເລັດ: '+(x.message||x))}
 }
 async function savePurchaseDebt(){
  try{let total=num($('pd_total').value),paid=num($('pd_paid').value);if(total<=0||paid<0||paid>total)throw Error('ກວດຍອດບິນ/ຍອດຈ່າຍ');await ins('purchase_orders',{purchase_no:$('pd_no').value||('PO-'+Date.now()),supplier_id:$('pd_sup').value||null,status:paid>=total?'paid':'received',currency:$('pd_cur').value,exchange_rate:1,subtotal:total,total,paid_amount:paid,balance_due:total-paid,note:$('pd_note').value,created_by:user.id,received_at:$('pd_date').value});closeModal();toast('ບັນທຶກໜີ້ຜູ້ສະໜອງແລ້ວ');render()}catch(x){toast(x.message||x)}
