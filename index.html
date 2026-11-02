@@ -106,7 +106,7 @@ async function receivablesPage(e){
 }
 async function quotesPage(e){
  let qs=await sel('quotations');qs.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
- e.innerHTML=head(pages.quotes,'<button onclick="quoteForm()">＋ ສ້າງໃບສະເໜີລາຄາ</button>')+'<div class="card">'+tbl(['ເລກໃບສະເໜີ','ລູກຄ້າ','ວັນທີ','ຍອດ','ສະກຸນ','ສະຖານະ','ຈັດການ'],qs.map(q=>'<tr><td>'+esc(q.quotation_no)+'</td><td>'+esc(q.customer_name||'—')+'</td><td>'+dateFmt(q.created_at)+'</td><td>'+fmt(q.total)+'</td><td>'+esc(q.currency)+'</td><td>'+esc(q.status)+'</td><td><button class="secondary" onclick="viewQuote(this.dataset.id)" data-id="'+q.id+'">ເບິ່ງ</button> <button class="secondary" onclick="editQuote(this.dataset.id)" data-id="'+q.id+'">ແກ້ໄຂ</button> <button onclick="printQuote(this.dataset.id)" data-id="'+q.id+'">ພິມ</button></td></tr>'))+'</div>';
+ e.innerHTML=head(pages.quotes,'<button onclick="quoteForm()">＋ ສ້າງໃບສະເໜີລາຄາ</button>')+'<div class="card">'+tbl(['ເລກໃບສະເໜີ','ລູກຄ້າ','ວັນທີ','ຍອດ','ສະກຸນ','ສະຖານະ','ຈັດການ'],qs.map(q=>'<tr><td>'+esc(q.quotation_no)+'</td><td>'+esc(q.customer_name||'—')+'</td><td>'+dateFmt(q.created_at)+'</td><td>'+fmt(q.total)+'</td><td>'+esc(q.currency)+'</td><td>'+esc(q.status)+'</td><td><button type="button" class="secondary" onclick="viewQuote(&quot;'+q.id+'&quot;)">ເບິ່ງ</button> <button type="button" class="secondary" onclick="editQuote(&quot;'+q.id+'&quot;)">ແກ້ໄຂ</button> <button type="button" onclick="printQuote(&quot;'+q.id+'&quot;)">ພິມ</button></td></tr>'))+'</div>';
 }
 function quoteForm(){
  quotePrevCurrency='LAK';quoteDraft=[{product_id:'',description:'',qty:1,unit_price:0}];
