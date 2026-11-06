@@ -121,14 +121,14 @@ async function saveNewSupplier(){
  }catch(x){toast('ບັນທຶກບໍ່ສຳເລັດ: '+(x.message||x))}
 }
 async function savePurchaseDebt(){
- try{let total=num($('pd_total').value),paid=num($('pd_paid').value);if(total<=0||paid<0||paid>total)throw Error('ກວດຍອດບິນ/ຍອດຈ່າຍ');await ins('purchase_orders',{purchase_no:$('pd_no').value||('PO-'+Date.now()),supplier_id:$('pd_sup').value||null,status:paid>=total?'paid':'received',currency:$('pd_cur').value,exchange_rate:1,subtotal:total,total,paid_amount:paid,balance_due:total-paid,note:$('pd_note').value,created_by:user.id,received_at:$('pd_date').value});closeModal();toast('ບັນທຶກໜີ້ຜູ້ສະໜອງແລ້ວ');render()}catch(x){toast(x.message||x)}
+ try{let total=num($('pd_total').value),paid=num($('pd_paid').value);if(total<=0||paid<0||paid>total)throw Error('ກວດຍອດບິນ/ຍອດຈ່າຍ');await ins('purchase_orders',{purchase_no:$('pd_no').value||('PO-'+Date.now()),supplier_id:$('pd_sup').value||null,status:'received',currency:$('pd_cur').value,exchange_rate:1,subtotal:total,total,paid_amount:paid,balance_due:total-paid,note:$('pd_note').value,created_by:user.id,received_at:$('pd_date').value});closeModal();toast('ບັນທຶກໜີ້ຜູ້ສະໜອງແລ້ວ');render()}catch(x){toast(x.message||x)}
 }
 async function paySupplier(id){
  let po=(await sel('purchase_orders')).find(x=>x.id===id);if(!po)return;
  modal('ຊຳລະໜີ້ຜູ້ສະໜອງ '+(po.purchase_no||''),'<div class="notice">ຍອດຄ້າງ: '+fmt(po.balance_due)+' '+esc(po.currency)+'</div>'+fld('ຈຳນວນຊຳລະ ('+esc(po.currency)+')','sp_amt','number',po.balance_due,'min="0.01" max="'+po.balance_due+'" step="0.01"')+sfield('ວິທີຈ່າຍ','sp_method',[{value:'cash',label:'ເງິນສົດ'},{value:'transfer',label:'ໂອນ'},{value:'other',label:'ອື່ນໆ'}])+fld('ໝາຍເຫດ','sp_note')+'<button onclick="saveSupplierPay(\''+id+'\')">ບັນທຶກຊຳລະ</button> <button class="secondary" onclick="closeModal()">ປິດ</button>');
 }
 async function saveSupplierPay(id){
- try{let po=(await sel('purchase_orders')).find(x=>x.id===id),amt=num($('sp_amt').value);if(!po||amt<=0||amt>num(po.balance_due))throw Error('ຈຳນວນຊຳລະບໍ່ຖືກ');await ins('supplier_payments',{purchase_order_id:id,amount:amt,currency:po.currency,payment_method:$('sp_method').value,note:$('sp_note').value,paid_by:user.id});let paid=num(po.paid_amount)+amt,balance=Math.max(0,num(po.total)-paid);await upd('purchase_orders',id,{paid_amount:paid,balance_due:balance,status:balance===0?'paid':'received'});closeModal();toast('ບັນທຶກຊຳລະໜີ້ແລ້ວ');render()}catch(x){toast(x.message||x)}
+ try{let po=(await sel('purchase_orders')).find(x=>x.id===id),amt=num($('sp_amt').value);if(!po||amt<=0||amt>num(po.balance_due))throw Error('ຈຳນວນຊຳລະບໍ່ຖືກ');await ins('supplier_payments',{purchase_order_id:id,amount:amt,currency:po.currency,payment_method:$('sp_method').value,note:$('sp_note').value,paid_by:user.id});let paid=num(po.paid_amount)+amt,balance=Math.max(0,num(po.total)-paid);await upd('purchase_orders',id,{paid_amount:paid,balance_due:balance,status:'received'});closeModal();toast('ບັນທຶກຊຳລະໜີ້ແລ້ວ');render()}catch(x){toast(x.message||x)}
 }
 async function receivablesPage(e){
  let ss=await sel('sales');ss=ss.filter(x=>num(x.balance_due)>0&&x.customer_id).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
