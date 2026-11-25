@@ -9,7 +9,9 @@
     "vite": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "@neondatabase/serverless": "^1.0.2"
+    "@neondatabase/serverless": "^1.0.2",
+    "bcryptjs": "^3.0.2",
+    "jose": "^6.1.0"
   },
   "devDependencies": {}
 }
